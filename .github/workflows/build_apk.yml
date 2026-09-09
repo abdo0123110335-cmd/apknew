@@ -33,7 +33,7 @@ jobs:
             cp google-services.json /tmp/google-services.json
           fi
 
-          # 2. إزالة مجلد الأندرويد التالف
+          # 2. إزالة مجلد الأندرويد القديم
           rm -rf android
 
           # 3. إعادة إنشاء مشروع أندرويد حديث
@@ -44,12 +44,12 @@ jobs:
             cp /tmp/google-services.json android/app/google-services.json
           fi
 
-          # 5. ربط فايربيز مع دعم الملفات الحديثة (.kts) والقديمة (.gradle)
+          # 5. إضافة مستودعات التنزيل مع إضافة فايربيز
           if [ -f "android/build.gradle.kts" ]; then
-            echo 'buildscript { dependencies { classpath("com.google.gms:google-services:4.4.1") } }' >> android/build.gradle.kts
+            echo 'buildscript { repositories { google(); mavenCentral() }; dependencies { classpath("com.google.gms:google-services:4.4.1") } }' >> android/build.gradle.kts
             echo 'apply(plugin = "com.google.gms.google-services")' >> android/app/build.gradle.kts
           elif [ -f "android/build.gradle" ]; then
-            echo 'buildscript { dependencies { classpath "com.google.gms:google-services:4.4.1" } }' >> android/build.gradle
+            echo 'buildscript { repositories { google(); mavenCentral() }; dependencies { classpath "com.google.gms:google-services:4.4.1" } }' >> android/build.gradle
             echo "apply plugin: 'com.google.gms.google-services'" >> android/app/build.gradle
           fi
 
