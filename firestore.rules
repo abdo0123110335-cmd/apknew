@@ -1,0 +1,42 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // التحقق من تسجيل الدخول
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    // جلب دور المستخدم الحالي
+    function getUserData() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+
+    function isManager() {
+      return isSignedIn() && getUserData().role == 'manager';
+    }
+
+    function isBillingOrManager() {
+      return isSignedIn() && (getUserData().role == 'billing_user' || getUserData().role == 'manager');
+    }
+
+    // قواعد جدول المستخدمين
+    match /users/{userId} {
+      allow read: if isSignedIn();
+      allow write: if isManager();
+    }
+
+    // قواعد جدول العملاء
+    match /clients/{clientId} {
+      allow read, create: if isSignedIn();
+      allow update, delete: if isBillingOrManager();
+    }
+
+    // قواعد جدول الفواتير
+    match /invoices/{invoiceId} {
+      allow read, create: if isSignedIn();
+      allow update, delete: if isBillingOrManager();
+    }
+  }
+}
+
