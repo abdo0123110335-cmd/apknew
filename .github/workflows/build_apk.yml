@@ -24,6 +24,12 @@ jobs:
         with:
           channel: 'stable'
 
+      - name: Auto-repair Android v2 Embedding & Firebase
+        run: |
+          flutter create --platforms=android .
+          echo "buildscript { dependencies { classpath 'com.google.gms:google-services:4.4.1' } }" >> android/build.gradle
+          echo "apply plugin: 'com.google.gms.google-services'" >> android/app/build.gradle
+
       - name: Get dependencies
         run: flutter pub get
 
