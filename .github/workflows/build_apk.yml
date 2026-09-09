@@ -26,27 +26,32 @@ jobs:
 
       - name: Rebuild Clean Android Project & Setup Firebase
         run: |
-          # 1. حفظ ملف google-services.json مؤقتاً إذا كان موجوداً
+          # 1. حفظ ملف google-services.json مؤقتاً
           if [ -f "android/app/google-services.json" ]; then
             cp android/app/google-services.json /tmp/google-services.json
           elif [ -f "google-services.json" ]; then
             cp google-services.json /tmp/google-services.json
           fi
 
-          # 2. إزالة مجلد الأندرويد المكسور القديم بالكامل
+          # 2. إزالة مجلد الأندرويد التالف
           rm -rf android
 
-          # 3. إنشاء هيكل أندرويد جديد ونظيف متوافق 100% مع أحدث إصدارات فلاتر
+          # 3. إعادة إنشاء مشروع أندرويد حديث
           flutter create --org com.example --project-name apk_main --platforms=android .
 
-          # 4. إعادة ملف google-services.json إلى مكانه الصحيح
+          # 4. استعادة ملف google-services.json
           if [ -f "/tmp/google-services.json" ]; then
             cp /tmp/google-services.json android/app/google-services.json
           fi
 
-          # 5. إضافة إعدادات فايربيز لملفات Gradle الجديدة
-          sed -i '/dependencies {/a \        classpath "com.google.gms:google-services:4.4.1"' android/build.gradle
-          echo "apply plugin: 'com.google.gms.google-services'" >> android/app/build.gradle
+          # 5. ربط فايربيز مع دعم الملفات الحديثة (.kts) والقديمة (.gradle)
+          if [ -f "android/build.gradle.kts" ]; then
+            echo 'buildscript { dependencies { classpath("com.google.gms:google-services:4.4.1") } }' >> android/build.gradle.kts
+            echo 'apply(plugin = "com.google.gms.google-services")' >> android/app/build.gradle.kts
+          elif [ -f "android/build.gradle" ]; then
+            echo 'buildscript { dependencies { classpath "com.google.gms:google-services:4.4.1" } }' >> android/build.gradle
+            echo "apply plugin: 'com.google.gms.google-services'" >> android/app/build.gradle
+          fi
 
       - name: Get dependencies
         run: flutter pub get
