@@ -24,10 +24,28 @@ jobs:
         with:
           channel: 'stable'
 
-      - name: Auto-repair Android v2 Embedding & Firebase
+      - name: Rebuild Clean Android Project & Setup Firebase
         run: |
-          flutter create --platforms=android .
-          echo "buildscript { dependencies { classpath 'com.google.gms:google-services:4.4.1' } }" >> android/build.gradle
+          # 1. حفظ ملف google-services.json مؤقتاً إذا كان موجوداً
+          if [ -f "android/app/google-services.json" ]; then
+            cp android/app/google-services.json /tmp/google-services.json
+          elif [ -f "google-services.json" ]; then
+            cp google-services.json /tmp/google-services.json
+          fi
+
+          # 2. إزالة مجلد الأندرويد المكسور القديم بالكامل
+          rm -rf android
+
+          # 3. إنشاء هيكل أندرويد جديد ونظيف متوافق 100% مع أحدث إصدارات فلاتر
+          flutter create --org com.example --project-name apk_main --platforms=android .
+
+          # 4. إعادة ملف google-services.json إلى مكانه الصحيح
+          if [ -f "/tmp/google-services.json" ]; then
+            cp /tmp/google-services.json android/app/google-services.json
+          fi
+
+          # 5. إضافة إعدادات فايربيز لملفات Gradle الجديدة
+          sed -i '/dependencies {/a \        classpath "com.google.gms:google-services:4.4.1"' android/build.gradle
           echo "apply plugin: 'com.google.gms.google-services'" >> android/app/build.gradle
 
       - name: Get dependencies
